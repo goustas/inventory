@@ -39,10 +39,13 @@ final class CAPO_Inv_Plugin {
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 		add_action( 'wp_initialize_site', array( $this, 'new_site' ), 20 );
 
-		if ( is_admin() ) {
-			require_once CAPO_INV_DIR . 'admin/class-capo-inv-admin.php';
-			CAPO_Inv_Admin::instance();
-		}
+		// The admin controller also holds the form handlers and flash messages that
+		// the front-end shortcodes use, so it is loaded in both contexts.
+		require_once CAPO_INV_DIR . 'admin/class-capo-inv-admin.php';
+		CAPO_Inv_Admin::instance();
+
+		require_once CAPO_INV_DIR . 'includes/class-capo-inv-frontend.php';
+		CAPO_Inv_Frontend::instance();
 	}
 
 	/**

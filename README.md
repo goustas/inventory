@@ -1,4 +1,4 @@
-# CAPO Inventory 1.0.1
+# CAPO Inventory 1.1.0
 
 WordPress plugin for the Cyprus Agricultural Payments Organisation's IT equipment register.
 Author: George Oustas, Pixelcrafters.com.cy — https://www.pixelcrafters.com.cy
@@ -19,6 +19,7 @@ This file covers how the plugin works, the assumptions made while building it, a
 | All Assets and per-employee inventory views | Yes |
 | Audit log with field-level changes | Yes |
 | CSV export (Plain and Excel-friendly) | Yes |
+| Front-end shortcodes (employee, requests, assets) | Yes (1.1.0) |
 | **Employee Equipment Acknowledgement PDF** | **No — deferred** (see section 7) |
 
 ## 2. Asset record
@@ -55,6 +56,24 @@ Uniqueness is enforced twice: by the plugin before saving, and by `UNIQUE` index
 
 Removal is a soft delete: the asset is archived, leaves the employee's active inventory, and keeps its Asset Tag reserved. Archived assets can be restored by a manager.
 
+## 3a. Front-end shortcodes
+
+| Shortcode | Who | What |
+|---|---|---|
+| `[capo_my_assets]` | Anyone with `capo_inv_use` | Own active assets; register; request change or removal; own requests with cancel |
+| `[capo_requests]` | `capo_inv_manage` | Queue with status tabs; review with comparison; approve or reject |
+| `[capo_assets]` | `capo_inv_manage` | Read-only search and filters, per-employee inventory, CSV export; "Edit in dashboard" links |
+
+All take `per_page` (5–100, default 20).
+
+How it works:
+
+- The forms post to the same `admin-post.php` handlers as the dashboard, so the same capability, nonce and ownership checks apply. Each form also posts `capo_return` (the page URL). The handler accepts it only if `wp_validate_redirect()` confirms it is on the same site, and sends the user back there with `capo_*` arguments (`capo_view`, `capo_asset`, `capo_request`, `capo_status`, `capo_paged`, `capo_s`, `capo_type_id`, `capo_location_id`, `capo_employee_id`). The prefix avoids clashes with WordPress's own `page` and `s` query variables.
+- Logged-out visitors get `wp_login_form()` redirecting back to the page. Logged-in users without the capability get a short access message and no data.
+- Templates are in `templates/` and can be overridden in `your-theme/capo-inventory/`. Every value is escaped in the templates; an override must keep that.
+- Pages containing a shortcode send `nocache_headers()` and define `DONOTCACHEPAGE`.
+- **Requirement:** employees must be able to reach `/wp-admin/admin-post.php`, because the forms submit there. Some security plugins block all of `/wp-admin/` for non-administrators; if so, allow `admin-post.php`.
+
 ## 4. Export
 
 All Assets → **CSV for Excel** or **Plain CSV**. Both export every row matching the current filters (not just the visible page), include a UTF-8 byte-order mark so Greek text displays correctly in Excel, and use the new field names as headings.
@@ -75,7 +94,7 @@ The original specification was not available while building this version. The fo
 5. **Assumption:** Asset Tags must start and end with a letter or number (a leading hyphen is refused). This keeps tags safe in spreadsheets.
 6. **Assumption:** Employees cannot reassign an asset to someone else; only managers can.
 7. **Assumption:** A removal request requires a reason; other comments are optional.
-8. **Assumption:** Employees use the plugin inside wp-admin. There is no front-end shortcode.
+8. Employees can use the plugin in wp-admin or on front-end pages through the shortcodes (added in 1.1.0).
 9. **Assumption:** Minimum versions are WordPress 6.0 and PHP 7.4.
 10. **Assumption:** Starter Asset Types (Laptop, Desktop, Monitor, Docking Station, Printer, Mobile Phone, Tablet, Other) are created on first activation. No Locations are created; a notice asks managers to add them.
 11. **Assumption:** Data is kept when the plugin is deleted, unless an Administrator enables deletion under Settings → General.
@@ -83,7 +102,7 @@ The original specification was not available while building this version. The fo
 
 ## 6. Acceptance checks
 
-"Automated" means checked by the logic test script run during the build (74 checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
+"Automated" means checked by the logic test script run during the build (74 data checks plus 23 front-end render checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
 
 | Check | Status |
 |---|---|
@@ -98,6 +117,10 @@ The original specification was not available while building this version. The fo
 | Approving a removal is refused if the asset was reassigned meanwhile | Automated. |
 | Typed text is stored as entered (no silent removal of `<`, `%20` etc.) | Automated. |
 | Audit log records old and new values | Automated. |
+| Shortcodes: logged-out login form, role checks, no other employee's data via URL tampering | Automated (render checks with stubbed WordPress functions). |
+| Shortcodes: form errors and submitted values are escaped | Automated. |
+| Shortcodes: return URL accepted only for the same site | Automated. |
+| Shortcodes: appearance in the CAPO theme, mobile layout | Needs manual check. |
 | PDF checks (ownership, Greek text, multipage, signature area) | Not applicable — PDF deferred. |
 
 **Manual test plan before going live:** install on a staging copy, add Locations, register `000123` as a manager, export both CSV formats and open them in Excel, log in as an employee and submit each request type, approve and reject from a manager account, try a duplicate of an archived tag, and check that Greek location names display correctly on screen and in exports.
@@ -128,12 +151,15 @@ capo-inventory/
 │   ├── class-capo-inv-requests.php   Request and approval workflow
 │   ├── class-capo-inv-audit.php      Audit log
 │   ├── class-capo-inv-export.php     CSV export
-│   └── class-capo-inv-plugin.php     Hooks
+│   ├── class-capo-inv-plugin.php     Hooks
+│   └── class-capo-inv-frontend.php   Shortcodes
 ├── admin/
 │   ├── class-capo-inv-admin.php      Menus, form handlers
 │   ├── class-capo-inv-assets-table.php
 │   └── views/                        Screen templates
+├── templates/                        Front-end templates (theme-overridable)
 ├── assets/css/admin.css
+├── assets/css/frontend.css
 └── languages/capo-inventory.pot      Translation template
 ```
 

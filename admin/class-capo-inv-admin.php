@@ -255,6 +255,46 @@ final class CAPO_Inv_Admin {
 	}
 
 	/**
+	 * Where a handler sends the user next. Forms rendered by a front-end
+	 * shortcode post a "capo_return" URL; the user goes back to that page with
+	 * the arguments prefixed "capo_". Otherwise the admin screen is used.
+	 *
+	 * @param string $slug Admin page slug used when there is no return page.
+	 * @param array  $args Query args (view, asset, request, status).
+	 * @return string
+	 */
+	private function dest( $slug, array $args = array() ) {
+		$return = self::return_url();
+		if ( '' === $return ) {
+			return self::url( $slug, $args );
+		}
+		$mapped = array();
+		foreach ( $args as $key => $value ) {
+			$mapped[ 'capo_' . $key ] = $value;
+		}
+		return add_query_arg( $mapped, $return );
+	}
+
+	/**
+	 * The validated front-end page a form came from, without its capo_* arguments.
+	 * Only same-site URLs are accepted.
+	 *
+	 * @return string Empty when absent or not allowed.
+	 */
+	public static function return_url() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- handlers verify the nonce first.
+		if ( empty( $_POST['capo_return'] ) ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$url = wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['capo_return'] ) ), '' );
+		if ( '' === $url ) {
+			return '';
+		}
+		return remove_query_arg( CAPO_Inv_Frontend::QUERY_KEYS, $url );
+	}
+
+	/**
 	 * Verify capability and nonce for a handler, or stop.
 	 *
 	 * @param string $cap    Capability.
@@ -445,9 +485,9 @@ final class CAPO_Inv_Admin {
 		$user   = get_current_user_id(); // Always the logged-in account, never a submitted value.
 		$result = CAPO_Inv_Requests::submit_create( $post, $user, isset( $post['reason'] ) ? $post['reason'] : '' );
 		if ( is_wp_error( $result ) ) {
-			$this->redirect_error( self::url( self::SLUG_MY, array( 'view' => 'register' ) ), $result, $post );
+			$this->redirect_error( $this->dest( self::SLUG_MY, array( 'view' => 'register' ) ), $result, $post );
 		}
-		$this->redirect( self::url( self::SLUG_MY ), 'success', __( 'Your asset was submitted for approval.', 'capo-inventory' ) );
+		$this->redirect( $this->dest( self::SLUG_MY ), 'success', __( 'Your asset was submitted for approval.', 'capo-inventory' ) );
 	}
 
 	/**
@@ -460,11 +500,11 @@ final class CAPO_Inv_Admin {
 		$result   = CAPO_Inv_Requests::submit_update( $asset_id, $post, get_current_user_id(), isset( $post['reason'] ) ? $post['reason'] : '' );
 		if ( is_wp_error( $result ) ) {
 			$back = in_array( $result->get_error_code(), array( 'invalid', 'no_change' ), true )
-				? self::url( self::SLUG_MY, array( 'view' => 'change', 'asset' => $asset_id ) )
-				: self::url( self::SLUG_MY );
+				? $this->dest( self::SLUG_MY, array( 'view' => 'change', 'asset' => $asset_id ) )
+				: $this->dest( self::SLUG_MY );
 			$this->redirect_error( $back, $result, $post );
 		}
-		$this->redirect( self::url( self::SLUG_MY ), 'success', __( 'Your change request was submitted for approval.', 'capo-inventory' ) );
+		$this->redirect( $this->dest( self::SLUG_MY ), 'success', __( 'Your change request was submitted for approval.', 'capo-inventory' ) );
 	}
 
 	/**
@@ -477,11 +517,11 @@ final class CAPO_Inv_Admin {
 		$result   = CAPO_Inv_Requests::submit_delete( $asset_id, get_current_user_id(), isset( $post['reason'] ) ? $post['reason'] : '' );
 		if ( is_wp_error( $result ) ) {
 			$back = 'invalid' === $result->get_error_code()
-				? self::url( self::SLUG_MY, array( 'view' => 'remove', 'asset' => $asset_id ) )
-				: self::url( self::SLUG_MY );
+				? $this->dest( self::SLUG_MY, array( 'view' => 'remove', 'asset' => $asset_id ) )
+				: $this->dest( self::SLUG_MY );
 			$this->redirect_error( $back, $result, $post );
 		}
-		$this->redirect( self::url( self::SLUG_MY ), 'success', __( 'Your removal request was submitted for approval.', 'capo-inventory' ) );
+		$this->redirect( $this->dest( self::SLUG_MY ), 'success', __( 'Your removal request was submitted for approval.', 'capo-inventory' ) );
 	}
 
 	/**
@@ -492,9 +532,9 @@ final class CAPO_Inv_Admin {
 		$post   = $this->post();
 		$result = CAPO_Inv_Requests::cancel( isset( $post['request_id'] ) ? absint( $post['request_id'] ) : 0, get_current_user_id() );
 		if ( is_wp_error( $result ) ) {
-			$this->redirect_error( self::url( self::SLUG_MY ), $result );
+			$this->redirect_error( $this->dest( self::SLUG_MY ), $result );
 		}
-		$this->redirect( self::url( self::SLUG_MY ), 'success', __( 'Your request was cancelled.', 'capo-inventory' ) );
+		$this->redirect( $this->dest( self::SLUG_MY ), 'success', __( 'Your request was cancelled.', 'capo-inventory' ) );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -562,7 +602,7 @@ final class CAPO_Inv_Admin {
 		$request_id = isset( $post['request_id'] ) ? absint( $post['request_id'] ) : 0;
 		$note       = isset( $post['review_note'] ) ? $post['review_note'] : '';
 		$decision   = isset( $post['decision'] ) ? sanitize_key( $post['decision'] ) : '';
-		$back       = self::url( self::SLUG_REQUESTS, array( 'view' => 'review', 'request' => $request_id ) );
+		$back       = $this->dest( self::SLUG_REQUESTS, array( 'view' => 'review', 'request' => $request_id ) );
 
 		if ( 'approve' === $decision ) {
 			$result = CAPO_Inv_Requests::approve( $request_id, get_current_user_id(), $note );
@@ -583,7 +623,7 @@ final class CAPO_Inv_Admin {
 			}
 			$this->redirect_error( $back, $result );
 		}
-		$this->redirect( self::url( self::SLUG_REQUESTS ), 'success', $done );
+		$this->redirect( $this->dest( self::SLUG_REQUESTS ), 'success', $done );
 	}
 
 	/**

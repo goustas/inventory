@@ -4,11 +4,11 @@ Author URI: https://www.pixelcrafters.com.cy
 Tags: inventory, assets, equipment, approval, audit
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-IT equipment inventory for the Cyprus Agricultural Payments Organisation, with employee requests, approval, audit log and CSV export.
+IT equipment inventory for the Cyprus Agricultural Payments Organisation, with employee requests, approval, audit log, CSV export and front-end shortcodes.
 
 == Description ==
 
@@ -20,6 +20,21 @@ CAPO Inventory keeps a register of IT equipment and the employee each item is as
 * **Employees** register their equipment and request changes or removal from **My Assets**. Requests do not change the approved records until an Inventory Manager or Administrator approves them.
 * **Inventory Managers** see all assets and each employee's inventory, review requests with a side-by-side comparison, and export CSV files.
 * Every change is recorded in the **Audit Log**.
+* **Front-end shortcodes** put the employee and manager screens on ordinary pages (see Shortcodes below).
+
+== Shortcodes ==
+
+Place each shortcode on its own page. Logged-out visitors see a login form that returns them to the same page.
+
+* `[capo_my_assets]` — for employees. Shows their active assets, lets them register an asset and request changes or removal, and lists their requests (with cancel for pending ones).
+* `[capo_requests]` — for Inventory Managers and Administrators. Request queue with status tabs; each request opens a side-by-side comparison with Approve and Reject.
+* `[capo_assets]` — for Inventory Managers and Administrators. Read-only, searchable list with filters (status, type, location, employee), per-employee inventory and CSV export. Editing stays in the dashboard.
+
+Optional attribute: `per_page` (5–100, default 20), for example `[capo_requests per_page="50"]`.
+
+Templates can be overridden by copying files from the plugin's `templates/` folder to `your-theme/capo-inventory/`. Colours can be adjusted with the CSS custom properties at the top of `assets/css/frontend.css`.
+
+Pages containing these shortcodes send no-cache headers and define `DONOTCACHEPAGE`, so page-caching plugins should not store personal inventory data.
 
 Developed by George Oustas, Pixelcrafters.com.cy (https://www.pixelcrafters.com.cy).
 
@@ -45,6 +60,16 @@ No. Employees submit requests; approved records change only when a request is ap
 Nothing, unless an Administrator ticks "Permanently delete all inventory data" under Settings → General before deleting the plugin.
 
 == Changelog ==
+
+= 1.1.0 - 2026-11-06 =
+* New: `[capo_my_assets]` shortcode — employees view their assets, register assets, request changes or removal, and see or cancel their requests on the front end.
+* New: `[capo_requests]` shortcode — Inventory Managers review requests with the side-by-side comparison and approve or reject them on the front end.
+* New: `[capo_assets]` shortcode — Inventory Managers search and filter all assets, view each employee's inventory and export CSV on the front end (read-only).
+* New: Logged-out visitors see a login form that returns them to the same page; users without the right role see an access message.
+* New: Front-end templates can be overridden from the theme (`your-theme/capo-inventory/`).
+* New: Responsive front-end stylesheet; tables become stacked cards on small screens.
+* New: Pages with the shortcodes are excluded from page caching.
+* Change: Form handlers return users to the front-end page they came from (same-site URLs only).
 
 = 1.0.1 - 2026-11-06 =
 * Fix: Approving a change request no longer overwrites fields the employee did not change. Edits a manager made after the request was submitted are kept, and the approval comparison highlights only the employee's changes.
