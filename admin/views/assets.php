@@ -73,7 +73,7 @@ if ( in_array( $capo_view, array( 'edit', 'status' ), true ) ) {
 							<option value="<?php echo esc_attr( $capo_employee ); ?>" selected><?php echo esc_html( CAPO_Inv_Fields::employee_name( $capo_employee ) ); ?></option>
 						<?php endif; ?>
 					</select>
-					<p class="description"><?php esc_html_e( 'Only users with the CAPO Employee, Inventory Manager or Administrator role are listed.', 'capo-inventory' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Users whose role cannot submit assets (Settings → General) are not listed.', 'capo-inventory' ); ?></p>
 					<?php CAPO_Inv_Admin::field_error( $capo_errors, 'employee_id' ); ?>
 				</td>
 			</tr>

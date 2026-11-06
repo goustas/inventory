@@ -55,6 +55,12 @@ final class CAPO_Inv_Install {
 	public static function maybe_upgrade() {
 		if ( get_option( 'capo_inv_db_version' ) !== CAPO_INV_DB_VERSION ) {
 			self::install();
+		} elseif ( get_option( 'capo_inv_version' ) !== CAPO_INV_VERSION ) {
+			// Plugin updated by uploading a new zip: activation does not run again,
+			// so re-apply roles, capabilities and new default settings here.
+			self::add_roles();
+			self::add_default_settings();
+			update_option( 'capo_inv_version', CAPO_INV_VERSION );
 		}
 	}
 
@@ -65,8 +71,26 @@ final class CAPO_Inv_Install {
 		self::create_tables();
 		self::add_roles();
 		self::seed_types();
+		self::add_default_settings();
 		update_option( 'capo_inv_db_version', CAPO_INV_DB_VERSION );
-		add_option( 'capo_inv_settings', array( 'delete_data_on_uninstall' => 0 ) );
+		update_option( 'capo_inv_version', CAPO_INV_VERSION );
+	}
+
+	/**
+	 * Add settings introduced by newer versions without touching existing values.
+	 */
+	private static function add_default_settings() {
+		$settings = get_option( 'capo_inv_settings', array() );
+		$settings = is_array( $settings ) ? $settings : array();
+		$defaults = array(
+			'delete_data_on_uninstall' => 0,
+			// Roles that cannot submit assets or hold a personal inventory.
+			'no_submit_roles'          => array( self::ROLE_MANAGER ),
+		);
+		$merged = array_merge( $defaults, $settings );
+		if ( $merged !== $settings ) {
+			update_option( 'capo_inv_settings', $merged );
+		}
 	}
 
 	/**

@@ -1,4 +1,4 @@
-# CAPO Inventory 1.1.0
+# CAPO Inventory 1.2.0
 
 WordPress plugin for the Cyprus Agricultural Payments Organisation's IT equipment register.
 Author: George Oustas, Pixelcrafters.com.cy — https://www.pixelcrafters.com.cy
@@ -33,7 +33,7 @@ This file covers how the plugin works, the assumptions made while building it, a
 | Location | Required dropdown (Settings → Locations). |
 | Serial Number | Optional for all types. Blank is always accepted. Non-blank values are unique (case and surrounding whitespace ignored). |
 | Notes | Optional, up to 2,000 characters. |
-| Assigned Employee | For employee submissions, always the logged-in account (never taken from the form). Managers choose from users with the CAPO Employee, Inventory Manager or Administrator role. |
+| Assigned Employee | For employee submissions, always the logged-in account (never taken from the form). Managers choose from users whose role may submit assets (see Roles below). |
 | Record Status | Active or Archived. |
 | Audit timestamps | Created, Last Updated, Archived — stored in UTC, shown in the WordPress timezone. |
 
@@ -41,11 +41,15 @@ Uniqueness is enforced twice: by the plugin before saving, and by `UNIQUE` index
 
 ## 3. Roles and screens
 
-| Role | Capability | Screens |
+| Role | Submits assets / My Assets | Manages inventory |
 |---|---|---|
-| CAPO Employee | `capo_inv_use` | CAPO Inventory → My Assets |
-| Inventory Manager | `capo_inv_use`, `capo_inv_manage` | My Assets, All Assets, Employees, Requests, Audit Log, Settings (Asset Types, Locations) |
-| Administrator | both, plus `manage_options` | Everything, plus Settings → General |
+| Any role on the site (Subscriber, Editor, Administrator, custom roles, CAPO Employee…) | Yes, unless the role is excluded | Administrators only |
+| Inventory Manager | No (excluded by default) | Yes: All Assets, Employees, Requests, Audit Log, Settings (Asset Types, Locations) |
+| Administrator | Yes (unless excluded) | Yes, plus Settings → General |
+
+Who may submit is decided at runtime (filter `user_has_cap` on `capo_inv_use`, class `CAPO_Inv_Access`): every user with a role on the site, except users holding a role listed under **Settings → General → Who can submit assets** (default: Inventory Manager). Roles added later by other plugins are covered automatically. Managing (`capo_inv_manage`) comes from the Inventory Manager and Administrator roles.
+
+When the plugin is updated by uploading a new zip, it re-applies its roles and capabilities on the next page load (activation does not run on updates).
 
 **Request workflow**
 
@@ -102,7 +106,7 @@ The original specification was not available while building this version. The fo
 
 ## 6. Acceptance checks
 
-"Automated" means checked by the logic test script run during the build (74 data checks plus 23 front-end render checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
+"Automated" means checked by the logic test script run during the build (74 data checks plus 43 front-end and access checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
 
 | Check | Status |
 |---|---|
@@ -120,6 +124,7 @@ The original specification was not available while building this version. The fo
 | Shortcodes: logged-out login form, role checks, no other employee's data via URL tampering | Automated (render checks with stubbed WordPress functions). |
 | Shortcodes: form errors and submitted values are escaped | Automated. |
 | Shortcodes: return URL accepted only for the same site | Automated. |
+| Every role except Inventory Manager can submit; setting changes the excluded roles | Automated. |
 | Shortcodes: appearance in the CAPO theme, mobile layout | Needs manual check. |
 | PDF checks (ownership, Greek text, multipage, signature area) | Not applicable — PDF deferred. |
 
@@ -146,6 +151,7 @@ capo-inventory/
 ├── includes/
 │   ├── class-capo-inv-fields.php     Field labels, normalisation, validation
 │   ├── class-capo-inv-install.php    Tables, roles, capabilities
+│   ├── class-capo-inv-access.php     Who may submit assets (by role)
 │   ├── class-capo-inv-lists.php      Asset Types and Locations
 │   ├── class-capo-inv-assets.php     Asset records and uniqueness
 │   ├── class-capo-inv-requests.php   Request and approval workflow

@@ -26,7 +26,7 @@ if ( '' !== $capo_search ) {
 <div class="wrap capo-inv">
 	<h1><?php esc_html_e( 'Employees', 'capo-inventory' ); ?></h1>
 	<?php $this->render_flash(); ?>
-	<p><?php esc_html_e( 'Users with the CAPO Employee, Inventory Manager or Administrator role. To add someone, give their WordPress account one of these roles under Users.', 'capo-inventory' ); ?></p>
+	<p><?php esc_html_e( 'Everyone with a role on this site who can submit assets. Roles that cannot submit assets are set under Settings → General.', 'capo-inventory' ); ?></p>
 
 	<form method="get" class="capo-inv-search">
 		<input type="hidden" name="page" value="<?php echo esc_attr( CAPO_Inv_Admin::SLUG_EMPLOYEES ); ?>" />

@@ -4,7 +4,7 @@ Author URI: https://www.pixelcrafters.com.cy
 Tags: inventory, assets, equipment, approval, audit
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ CAPO Inventory keeps a register of IT equipment and the employee each item is as
 * **Asset Tag / Inventory Number**: the number on the physical inventory sticker. It is required and stored as text, so leading zeros are kept (000123). It may contain letters, numbers and hyphens. It is unique across active and archived assets, ignoring letter case and surrounding spaces.
 * **Description / Make and Model** is optional, for example "Dell Latitude 5540".
 * **Serial Number** is optional for every asset type. Blank serial numbers are always accepted; a non-blank serial number must be unique.
-* **Employees** register their equipment and request changes or removal from **My Assets**. Requests do not change the approved records until an Inventory Manager or Administrator approves them.
+* **Employees** (every role except Inventory Manager, configurable) register their equipment and request changes or removal from **My Assets**. Requests do not change the approved records until an Inventory Manager or Administrator approves them.
 * **Inventory Managers** see all assets and each employee's inventory, review requests with a side-by-side comparison, and export CSV files.
 * Every change is recorded in the **Audit Log**.
 * **Front-end shortcodes** put the employee and manager screens on ordinary pages (see Shortcodes below).
@@ -42,7 +42,7 @@ Developed by George Oustas, Pixelcrafters.com.cy (https://www.pixelcrafters.com.
 
 1. In WordPress, go to Plugins → Add New → Upload Plugin and upload `capo-inventory.zip`.
 2. Activate the plugin.
-3. Under Users, give staff the **CAPO Employee** role and inventory staff the **Inventory Manager** role. Administrators have full access automatically.
+3. Under Users, give inventory staff the **Inventory Manager** role. Every other role (Administrators included) can submit assets and has a personal inventory; Administrators can change which roles are excluded under CAPO Inventory → Settings → General.
 4. Go to CAPO Inventory → Settings and add the **Locations**. Edit the starter **Asset Types** as needed.
 
 == Frequently Asked Questions ==
@@ -60,6 +60,13 @@ No. Employees submit requests; approved records change only when a request is ap
 Nothing, unless an Administrator ticks "Permanently delete all inventory data" under Settings → General before deleting the plugin.
 
 == Changelog ==
+
+= 1.2.0 - 2026-11-06 =
+* Change: Every user with a role on the site can now submit assets and has a personal inventory (Administrators, Editors, Subscribers and custom roles included), except Inventory Managers. Previously only CAPO Employee, Inventory Manager and Administrator could.
+* New: Settings → General → "Who can submit assets" lets Administrators choose which roles are excluded (default: Inventory Manager).
+* Change: Inventory Managers no longer see My Assets; their CAPO Inventory menu opens on All Assets.
+* Fix: Updating the plugin by uploading a new zip now re-applies its roles and capabilities, which previously only happened on first activation.
+* Improvement: Clearer front-end messages: Inventory Managers are told they have no personal inventory, and Administrators who are refused are told which setting to check.
 
 = 1.1.0 - 2026-11-06 =
 * New: `[capo_my_assets]` shortcode — employees view their assets, register assets, request changes or removal, and see or cancel their requests on the front end.

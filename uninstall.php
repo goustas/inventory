@@ -26,6 +26,7 @@ function capo_inv_uninstall_site() {
 
 	delete_option( 'capo_inv_settings' );
 	delete_option( 'capo_inv_db_version' );
+	delete_option( 'capo_inv_version' );
 
 	remove_role( 'capo_employee' );
 	remove_role( 'capo_inventory_manager' );

@@ -351,14 +351,26 @@ final class CAPO_Inv_Assets {
 	 * @return WP_User[]
 	 */
 	public static function employees() {
-		return get_users(
+		// Who may hold assets is decided by role at runtime (see CAPO_Inv_Access),
+		// which get_users( 'capability' ) cannot see, so filter by role here.
+		$users = get_users(
 			array(
-				'capability' => CAPO_Inv_Install::CAP_USE,
-				'orderby'    => 'display_name',
-				'order'      => 'ASC',
-				'fields'     => array( 'ID', 'display_name', 'user_email' ),
+				'role__not_in' => CAPO_Inv_Access::excluded_roles(),
+				'orderby'      => 'display_name',
+				'order'        => 'ASC',
 			)
 		);
+		$out = array();
+		foreach ( $users as $user ) {
+			if ( CAPO_Inv_Access::roles_may_submit( (array) $user->roles ) ) {
+				$out[] = (object) array(
+					'ID'           => (int) $user->ID,
+					'display_name' => $user->display_name,
+					'user_email'   => $user->user_email,
+				);
+			}
+		}
+		return $out;
 	}
 
 	/**

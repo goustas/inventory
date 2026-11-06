@@ -78,32 +78,43 @@ final class CAPO_Inv_Admin {
 	 * Register admin menus.
 	 */
 	public function menu() {
+		$can_use    = current_user_can( CAPO_Inv_Install::CAP_USE );
+		$can_manage = current_user_can( CAPO_Inv_Install::CAP_MANAGE );
+		if ( ! $can_use && ! $can_manage ) {
+			return;
+		}
+
+		// Users who submit assets land on My Assets; Inventory Managers, who do
+		// not hold a personal inventory, land on All Assets.
+		$parent = $can_use ? self::SLUG_MY : self::SLUG_ASSETS;
 		add_menu_page(
-			__( 'My Assets', 'capo-inventory' ),
+			$can_use ? __( 'My Assets', 'capo-inventory' ) : __( 'All Assets', 'capo-inventory' ),
 			__( 'CAPO Inventory', 'capo-inventory' ),
-			CAPO_Inv_Install::CAP_USE,
-			self::SLUG_MY,
-			array( $this, 'page_my_assets' ),
+			$can_use ? CAPO_Inv_Install::CAP_USE : CAPO_Inv_Install::CAP_MANAGE,
+			$parent,
+			$can_use ? array( $this, 'page_my_assets' ) : array( $this, 'page_assets' ),
 			'dashicons-laptop',
 			26
 		);
-		add_submenu_page( self::SLUG_MY, __( 'My Assets', 'capo-inventory' ), __( 'My Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_USE, self::SLUG_MY, array( $this, 'page_my_assets' ) );
+		if ( $can_use ) {
+			add_submenu_page( $parent, __( 'My Assets', 'capo-inventory' ), __( 'My Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_USE, self::SLUG_MY, array( $this, 'page_my_assets' ) );
+		}
 
-		if ( ! current_user_can( CAPO_Inv_Install::CAP_MANAGE ) ) {
+		if ( ! $can_manage ) {
 			return;
 		}
 
 		$pending = CAPO_Inv_Requests::pending_count();
 		$badge   = $pending ? sprintf( ' <span class="awaiting-mod count-%1$d"><span class="pending-count">%1$d</span></span>', $pending ) : '';
 
-		$assets_hook = add_submenu_page( self::SLUG_MY, __( 'All Assets', 'capo-inventory' ), __( 'All Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_ASSETS, array( $this, 'page_assets' ) );
+		$assets_hook = add_submenu_page( $parent, __( 'All Assets', 'capo-inventory' ), __( 'All Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_ASSETS, array( $this, 'page_assets' ) );
 		if ( $assets_hook ) {
 			add_action( 'load-' . $assets_hook, array( $this, 'clean_list_url' ) );
 		}
-		add_submenu_page( self::SLUG_MY, __( 'Employees', 'capo-inventory' ), __( 'Employees', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_EMPLOYEES, array( $this, 'page_employees' ) );
-		add_submenu_page( self::SLUG_MY, __( 'Requests', 'capo-inventory' ), __( 'Requests', 'capo-inventory' ) . $badge, CAPO_Inv_Install::CAP_MANAGE, self::SLUG_REQUESTS, array( $this, 'page_requests' ) );
-		add_submenu_page( self::SLUG_MY, __( 'Audit Log', 'capo-inventory' ), __( 'Audit Log', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_AUDIT, array( $this, 'page_audit' ) );
-		add_submenu_page( self::SLUG_MY, __( 'Inventory Settings', 'capo-inventory' ), __( 'Settings', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_SETTINGS, array( $this, 'page_settings' ) );
+		add_submenu_page( $parent, __( 'Employees', 'capo-inventory' ), __( 'Employees', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_EMPLOYEES, array( $this, 'page_employees' ) );
+		add_submenu_page( $parent, __( 'Requests', 'capo-inventory' ), __( 'Requests', 'capo-inventory' ) . $badge, CAPO_Inv_Install::CAP_MANAGE, self::SLUG_REQUESTS, array( $this, 'page_requests' ) );
+		add_submenu_page( $parent, __( 'Audit Log', 'capo-inventory' ), __( 'Audit Log', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_AUDIT, array( $this, 'page_audit' ) );
+		add_submenu_page( $parent, __( 'Inventory Settings', 'capo-inventory' ), __( 'Settings', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_SETTINGS, array( $this, 'page_settings' ) );
 	}
 
 	/**
@@ -692,13 +703,17 @@ final class CAPO_Inv_Admin {
 	 */
 	public function handle_settings() {
 		$this->guard( 'manage_options', 'capo_inv_settings' );
-		$post = $this->post();
-		update_option(
-			'capo_inv_settings',
-			array(
-				'delete_data_on_uninstall' => ! empty( $post['delete_data_on_uninstall'] ) ? 1 : 0,
-			)
-		);
+		$post     = $this->post();
+		$roles    = array_keys( wp_roles()->get_names() );
+		$excluded = isset( $post['no_submit_roles'] ) && is_array( $post['no_submit_roles'] )
+			? array_values( array_intersect( $roles, array_map( 'sanitize_key', $post['no_submit_roles'] ) ) )
+			: array();
+		$settings = get_option( 'capo_inv_settings', array() );
+		$settings = is_array( $settings ) ? $settings : array();
+
+		$settings['delete_data_on_uninstall'] = ! empty( $post['delete_data_on_uninstall'] ) ? 1 : 0;
+		$settings['no_submit_roles']          = $excluded;
+		update_option( 'capo_inv_settings', $settings );
 		$this->redirect( self::url( self::SLUG_SETTINGS, array( 'tab' => 'general' ) ), 'success', __( 'Settings saved.', 'capo-inventory' ) );
 	}
 }

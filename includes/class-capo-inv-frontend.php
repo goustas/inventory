@@ -304,10 +304,24 @@ final class CAPO_Inv_Frontend {
 			);
 			return '<div class="capo-inv-fe capo-inv-fe--login"><p>' . esc_html__( 'Please log in to see your equipment.', 'capo-inventory' ) . '</p>' . $form . '</div>';
 		}
-		if ( ! current_user_can( $cap ) ) {
-			return '<div class="capo-inv-fe"><p class="capo-inv-fe__notice capo-inv-fe__notice--warning">' . esc_html__( 'Your account does not have access to this section. Contact the IT department if you think this is wrong.', 'capo-inventory' ) . '</p></div>';
+		if ( current_user_can( $cap ) ) {
+			return '';
 		}
-		return '';
+
+		$message = __( 'Your account does not have access to this section. Contact the IT department if you think this is wrong.', 'capo-inventory' );
+		if ( CAPO_Inv_Install::CAP_USE === $cap && current_user_can( CAPO_Inv_Install::CAP_MANAGE ) ) {
+			$message = __( 'Inventory Managers do not have a personal inventory. Use the requests and assets pages to manage equipment.', 'capo-inventory' );
+		}
+		$out = '<p class="capo-inv-fe__notice capo-inv-fe__notice--warning">' . esc_html( $message ) . '</p>';
+
+		// Tell administrators exactly why, so they can fix it.
+		if ( current_user_can( 'manage_options' ) ) {
+			$hint = CAPO_Inv_Install::CAP_USE === $cap
+				? __( 'Administrator note: one of your roles is listed under CAPO Inventory → Settings → General → "Who can submit assets", or your account has no role on this site.', 'capo-inventory' )
+				: __( 'Administrator note: this section needs the Inventory Manager or Administrator role.', 'capo-inventory' );
+			$out .= '<p class="capo-inv-fe__help">' . esc_html( $hint ) . ' <a href="' . esc_url( CAPO_Inv_Admin::url( CAPO_Inv_Admin::SLUG_SETTINGS, array( 'tab' => 'general' ) ) ) . '">' . esc_html__( 'Open settings', 'capo-inventory' ) . '</a></p>';
+		}
+		return '<div class="capo-inv-fe">' . $out . '</div>';
 	}
 
 	/**

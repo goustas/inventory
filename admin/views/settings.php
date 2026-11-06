@@ -38,6 +38,25 @@ $capo_post = admin_url( 'admin-post.php' );
 		<?php wp_nonce_field( 'capo_inv_settings' ); ?>
 		<table class="form-table" role="presentation">
 			<tr>
+				<th scope="row"><?php esc_html_e( 'Who can submit assets', 'capo-inventory' ); ?></th>
+				<td>
+					<fieldset>
+						<legend><?php esc_html_e( 'Every user with a role on this site can register assets and has a personal inventory, except users with a role ticked below.', 'capo-inventory' ); ?></legend>
+						<?php
+						$capo_excluded = CAPO_Inv_Access::excluded_roles();
+						foreach ( wp_roles()->get_names() as $capo_role => $capo_role_name ) :
+							?>
+							<label class="capo-inv-role">
+								<input type="checkbox" name="no_submit_roles[]" value="<?php echo esc_attr( $capo_role ); ?>" <?php checked( in_array( $capo_role, $capo_excluded, true ) ); ?> />
+								<?php echo esc_html( translate_user_role( $capo_role_name ) ); ?>
+								<code><?php echo esc_html( $capo_role ); ?></code>
+							</label><br />
+						<?php endforeach; ?>
+					</fieldset>
+					<p class="description"><?php esc_html_e( 'Users with a ticked role do not see My Assets and cannot be assigned assets. Assets they already hold stay in the register. Inventory Managers manage inventory through All Assets and Requests whether or not their role is ticked.', 'capo-inventory' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th scope="row"><?php esc_html_e( 'Uninstall', 'capo-inventory' ); ?></th>
 				<td>
 					<label>
