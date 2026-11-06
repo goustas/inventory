@@ -68,6 +68,7 @@ final class CAPO_Inv_Admin {
 		foreach ( $handlers as $action => $method ) {
 			add_action( 'admin_post_' . $action, array( $this, $method ) );
 		}
+		add_action( 'wp_ajax_capo_inv_quick_edit', array( $this, 'ajax_quick_edit' ) );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -128,6 +129,22 @@ final class CAPO_Inv_Admin {
 			return;
 		}
 		wp_enqueue_style( 'capo-inventory-admin', CAPO_INV_URL . 'assets/css/admin.css', array(), CAPO_INV_VERSION );
+
+		if ( self::SLUG_ASSETS === $page && current_user_can( CAPO_Inv_Install::CAP_MANAGE ) ) {
+			wp_enqueue_script( 'capo-inventory-quick-edit', CAPO_INV_URL . 'assets/js/admin-quick-edit.js', array( 'wp-a11y' ), CAPO_INV_VERSION, true );
+			wp_localize_script(
+				'capo-inventory-quick-edit',
+				'capoInvQuickEdit',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'capo_inv_quick_edit' ),
+					'i18n'    => array(
+						'saved'  => __( 'Asset updated.', 'capo-inventory' ),
+						'failed' => __( 'The asset could not be saved. Please try again, or reload the page.', 'capo-inventory' ),
+					),
+				)
+			);
+		}
 	}
 
 	/**
@@ -635,6 +652,86 @@ final class CAPO_Inv_Admin {
 			$this->redirect_error( $back, $result );
 		}
 		$this->redirect( $this->dest( self::SLUG_REQUESTS ), 'success', $done );
+	}
+
+	/**
+	 * Quick Edit save from the All Assets table (AJAX).
+	 *
+	 * Uses the same validation, uniqueness checks and audit logging as the full
+	 * edit form. Field changes and a status change run in one transaction.
+	 */
+	public function ajax_quick_edit() {
+		if ( ! current_user_can( CAPO_Inv_Install::CAP_MANAGE ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'capo-inventory' ) ), 403 );
+		}
+		check_ajax_referer( 'capo_inv_quick_edit' );
+
+		global $wpdb;
+		$post     = $this->post();
+		$asset_id = isset( $post['asset_id'] ) ? absint( $post['asset_id'] ) : 0;
+		$asset    = CAPO_Inv_Assets::get( $asset_id );
+		if ( ! $asset ) {
+			wp_send_json_error( array( 'message' => __( 'The asset no longer exists. Reload the page.', 'capo-inventory' ) ) );
+		}
+		if ( ! isset( $post['updated_at'] ) || (string) $post['updated_at'] !== (string) $asset['updated_at'] ) {
+			wp_send_json_error( array( 'message' => __( 'Someone else changed this asset after the page was loaded. Reload the page to see the latest details, then edit again.', 'capo-inventory' ) ) );
+		}
+
+		$data     = CAPO_Inv_Fields::clean_input( $post );
+		$employee = isset( $post['employee_id'] ) ? absint( $post['employee_id'] ) : 0;
+		$status   = isset( $post['status'] ) && 'archived' === $post['status'] ? 'archived' : 'active';
+		$actor    = get_current_user_id();
+
+		$wpdb->query( 'START TRANSACTION' );
+		$result = true;
+		if ( 'archived' === $asset['status'] ) {
+			// An archived asset can only be edited after it is restored.
+			if ( 'active' === $status ) {
+				$result = CAPO_Inv_Assets::restore( $asset_id, $actor );
+				if ( ! is_wp_error( $result ) ) {
+					$result = CAPO_Inv_Assets::update( $asset_id, $data, $employee, $actor );
+				}
+			}
+		} else {
+			$result = CAPO_Inv_Assets::update( $asset_id, $data, $employee, $actor );
+			if ( ! is_wp_error( $result ) && 'archived' === $status ) {
+				$result = CAPO_Inv_Assets::archive( $asset_id, $actor );
+			}
+		}
+
+		if ( is_wp_error( $result ) ) {
+			$wpdb->query( 'ROLLBACK' );
+			$error_data = $result->get_error_data();
+			wp_send_json_error(
+				array(
+					'message' => $result->get_error_message(),
+					'fields'  => is_array( $error_data ) && isset( $error_data['fields'] ) ? $error_data['fields'] : array(),
+				)
+			);
+		}
+		$wpdb->query( 'COMMIT' );
+
+		// Render the updated row exactly as the table does.
+		require_once CAPO_INV_DIR . 'admin/class-capo-inv-assets-table.php';
+		$item = CAPO_Inv_Assets::get( $asset_id );
+		$user = $item['employee_id'] ? get_userdata( (int) $item['employee_id'] ) : false;
+
+		$item['employee_name']  = $user ? $user->display_name : null;
+		$item['employee_email'] = $user ? $user->user_email : null;
+
+		$table = new CAPO_Inv_Assets_Table( 'capo-inventory-assets' );
+		$table->prepare_column_headers();
+		ob_start();
+		$table->single_row( $item );
+		$row = ob_get_clean();
+
+		wp_send_json_success(
+			array(
+				'row'     => $row,
+				/* translators: %s: Asset Tag. */
+				'message' => sprintf( __( 'Asset %s updated.', 'capo-inventory' ), $item['asset_tag'] ),
+			)
+		);
 	}
 
 	/**

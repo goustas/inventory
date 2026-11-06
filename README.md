@@ -1,4 +1,4 @@
-# CAPO Inventory 1.2.0
+# CAPO Inventory 1.3.0
 
 WordPress plugin for the Cyprus Agricultural Payments Organisation's IT equipment register.
 Author: George Oustas, Pixelcrafters.com.cy — https://www.pixelcrafters.com.cy
@@ -20,6 +20,7 @@ This file covers how the plugin works, the assumptions made while building it, a
 | Audit log with field-level changes | Yes |
 | CSV export (Plain and Excel-friendly) | Yes |
 | Front-end shortcodes (employee, requests, assets) | Yes (1.1.0) |
+| Quick Edit on All Assets | Yes (1.3.0) |
 | **Employee Equipment Acknowledgement PDF** | **No — deferred** (see section 7) |
 
 ## 2. Asset record
@@ -59,6 +60,16 @@ When the plugin is updated by uploading a new zip, it re-applies its roles and c
 4. On approval the plugin re-checks every rule (including uniqueness) inside a database transaction, then creates, updates or archives the asset and writes the audit entry. A change request applies only the fields the employee changed, so edits a manager made in the meantime are kept. A change or removal is refused if the asset has been reassigned to someone else since the request was made.
 
 Removal is a soft delete: the asset is archived, leaves the employee's active inventory, and keeps its Asset Tag reserved. Archived assets can be restored by a manager.
+
+## 3b. Quick Edit (All Assets)
+
+A **Quick Edit** row action opens an inline editor for Asset Tag, Asset Type, Description / Make and Model, Serial Number, Location, Assigned Employee, Record Status and Notes. Last Updated is set automatically.
+
+- Saves through `admin-ajax.php` (`capo_inv_quick_edit`): requires `capo_inv_manage` and a nonce, then runs the same `CAPO_Inv_Assets` update, archive and restore methods as the full form, so validation, uniqueness and the audit log are identical.
+- Field changes and a status change run in one database transaction. Archiving is refused while the asset has a pending request, and the field changes are rolled back with it.
+- Each row carries the asset's `updated_at`. The save is refused if the asset changed since the page loaded.
+- The server returns the re-rendered row, which replaces the old one in place.
+- Inputs have no `name` attributes, so pressing Enter saves the asset instead of submitting the surrounding filter form.
 
 ## 3a. Front-end shortcodes
 
@@ -106,7 +117,7 @@ The original specification was not available while building this version. The fo
 
 ## 6. Acceptance checks
 
-"Automated" means checked by the logic test script run during the build (74 data checks plus 43 front-end and access checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
+"Automated" means checked by the logic test script run during the build (74 data checks, 43 front-end and access checks, 5 Quick Edit handler checks, and 39 Quick Edit checks in headless Chrome, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
 
 | Check | Status |
 |---|---|
@@ -125,6 +136,8 @@ The original specification was not available while building this version. The fo
 | Shortcodes: form errors and submitted values are escaped | Automated. |
 | Shortcodes: return URL accepted only for the same site | Automated. |
 | Every role except Inventory Manager can submit; setting changes the excluded roles | Automated. |
+| Quick Edit: open, cancel, save, inline errors, archive/restore, keyboard and focus, stale-edit and nonce refusal | Automated in headless Chrome against the plugin's real handler and test database. WordPress core admin styles were not loaded. |
+| Quick Edit: refused archive rolls back the field changes | Automated. |
 | Shortcodes: appearance in the CAPO theme, mobile layout | Needs manual check. |
 | PDF checks (ownership, Greek text, multipage, signature area) | Not applicable — PDF deferred. |
 
@@ -166,6 +179,7 @@ capo-inventory/
 ├── templates/                        Front-end templates (theme-overridable)
 ├── assets/css/admin.css
 ├── assets/css/frontend.css
+├── assets/js/admin-quick-edit.js     Quick Edit on All Assets
 └── languages/capo-inventory.pot      Translation template
 ```
 

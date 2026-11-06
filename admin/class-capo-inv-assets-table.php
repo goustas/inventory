@@ -25,15 +25,19 @@ class CAPO_Inv_Assets_Table extends WP_List_Table {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param string|null $screen Screen ID; needed when rendering a row during an AJAX request.
 	 */
-	public function __construct() {
-		parent::__construct(
-			array(
-				'singular' => 'asset',
-				'plural'   => 'assets',
-				'ajax'     => false,
-			)
+	public function __construct( $screen = null ) {
+		$args = array(
+			'singular' => 'asset',
+			'plural'   => 'assets',
+			'ajax'     => false,
 		);
+		if ( $screen ) {
+			$args['screen'] = $screen;
+		}
+		parent::__construct( $args );
 
 		$status        = CAPO_Inv_Admin::get_key( 'status', 'active' );
 		$this->filters = array(
@@ -115,14 +119,32 @@ class CAPO_Inv_Assets_Table extends WP_List_Table {
 			)
 		);
 
-		$this->items           = $result['rows'];
-		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns(), 'asset_tag' );
+		$this->items = $result['rows'];
+		$this->prepare_column_headers();
 		$this->set_pagination_args(
 			array(
 				'total_items' => $result['total'],
 				'per_page'    => $per_page,
 			)
 		);
+	}
+
+	/**
+	 * Set the column headers (also used when rendering a single row over AJAX).
+	 */
+	public function prepare_column_headers() {
+		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns(), 'asset_tag' );
+	}
+
+	/**
+	 * Row markup with the asset ID, so Quick Edit can find and replace it.
+	 *
+	 * @param array $item Row.
+	 */
+	public function single_row( $item ) {
+		printf( '<tr id="capo-asset-%d">', (int) $item['id'] );
+		$this->single_row_columns( $item );
+		echo '</tr>';
 	}
 
 	/**
@@ -175,6 +197,12 @@ class CAPO_Inv_Assets_Table extends WP_List_Table {
 		} else {
 			$actions['restore'] = sprintf( '<a href="%s">%s</a>', esc_url( CAPO_Inv_Admin::url( CAPO_Inv_Admin::SLUG_ASSETS, array( 'view' => 'status', 'asset' => $item['id'] ) ) ), esc_html__( 'Restore', 'capo-inventory' ) );
 		}
+		$actions['quick_edit'] = sprintf(
+			'<button type="button" class="button-link capo-inv-qe-open" aria-expanded="false">%s<span class="screen-reader-text"> %s</span></button>',
+			esc_html__( 'Quick Edit', 'capo-inventory' ),
+			/* translators: %s: Asset Tag. */
+			esc_html( sprintf( __( 'asset %s inline', 'capo-inventory' ), $item['asset_tag'] ) )
+		);
 		$actions['history'] = sprintf( '<a href="%s">%s</a>', esc_url( CAPO_Inv_Admin::url( CAPO_Inv_Admin::SLUG_AUDIT, array( 'asset' => $item['id'] ) ) ), esc_html__( 'History', 'capo-inventory' ) );
 
 		$pending = CAPO_Inv_Requests::pending_for_asset( (int) $item['id'] );
@@ -182,7 +210,24 @@ class CAPO_Inv_Assets_Table extends WP_List_Table {
 			? sprintf( ' <a class="capo-inv-badge capo-inv-badge--pending" href="%s">%s</a>', esc_url( CAPO_Inv_Admin::url( CAPO_Inv_Admin::SLUG_REQUESTS, array( 'view' => 'review', 'request' => $pending['id'] ) ) ), esc_html__( 'Pending request', 'capo-inventory' ) )
 			: '';
 
-		return '<strong class="capo-inv-tag">' . esc_html( $item['asset_tag'] ) . '</strong>' . $badge . $this->row_actions( $actions );
+		// Current values for Quick Edit. updated_at lets the server refuse a save
+		// if someone else changed the asset after this page was loaded.
+		$data = array(
+			'id'            => (int) $item['id'],
+			'asset_tag'     => (string) $item['asset_tag'],
+			'type_id'       => (int) $item['type_id'],
+			'description'   => (string) $item['description'],
+			'location_id'   => (int) $item['location_id'],
+			'serial_number' => (string) $item['serial_number'],
+			'notes'         => (string) $item['notes'],
+			'employee_id'   => (int) $item['employee_id'],
+			'employee_name' => CAPO_Inv_Fields::employee_name( (int) $item['employee_id'] ),
+			'status'        => (string) $item['status'],
+			'updated_at'    => (string) $item['updated_at'],
+		);
+		$inline = sprintf( '<span class="capo-inv-qe-data" hidden data-capo="%s"></span>', esc_attr( wp_json_encode( $data ) ) );
+
+		return '<strong class="capo-inv-tag">' . esc_html( $item['asset_tag'] ) . '</strong>' . $badge . $inline . $this->row_actions( $actions );
 	}
 
 	/**

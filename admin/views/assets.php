@@ -164,6 +164,7 @@ if ( in_array( $capo_view, array( 'edit', 'status' ), true ) ) {
 		$capo_table->display();
 		?>
 	</form>
+	<?php include CAPO_INV_DIR . 'admin/views/quick-edit.php'; ?>
 
 	<?php
 	$capo_export_args = array_filter(

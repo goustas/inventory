@@ -2,9 +2,9 @@
 # This file is distributed under the GPL-2.0-or-later license.
 msgid ""
 msgstr ""
-"Project-Id-Version: CAPO Inventory 1.2.0\n"
+"Project-Id-Version: CAPO Inventory 1.3.0\n"
 "Report-Msgid-Bugs-To: https://www.pixelcrafters.com.cy\n"
-"POT-Creation-Date: 2026-11-06 10:22+0000\n"
+"POT-Creation-Date: 2026-11-06 10:37+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: admin/views/settings.php:26 admin/class-capo-inv-admin.php:117
+#: admin/views/settings.php:26 admin/class-capo-inv-admin.php:118
 msgid "Inventory Settings"
 msgstr ""
 
@@ -88,7 +88,7 @@ msgstr ""
 msgid "Rename"
 msgstr ""
 
-#: admin/views/settings.php:126 admin/class-capo-inv-assets-table.php:92 templates/assets.php:88 includes/class-capo-inv-fields.php:78
+#: admin/views/settings.php:126 admin/class-capo-inv-assets-table.php:96 templates/assets.php:88 includes/class-capo-inv-fields.php:78
 msgid "Active"
 msgstr ""
 
@@ -114,7 +114,7 @@ msgstr ""
 msgid "History of Asset %s"
 msgstr ""
 
-#: admin/views/audit.php:30 admin/class-capo-inv-admin.php:116
+#: admin/views/audit.php:30 admin/class-capo-inv-admin.php:117
 msgid "Audit Log"
 msgstr ""
 
@@ -160,7 +160,7 @@ msgstr ""
 msgid "(blank)"
 msgstr ""
 
-#: admin/views/employees.php:27 admin/class-capo-inv-admin.php:114
+#: admin/views/employees.php:27 admin/class-capo-inv-admin.php:115
 msgid "Employees"
 msgstr ""
 
@@ -196,6 +196,32 @@ msgstr ""
 msgid "Register an asset"
 msgstr ""
 
+#: admin/views/quick-edit.php:18 admin/views/quick-edit.php:19 admin/class-capo-inv-assets-table.php:202
+msgid "Quick Edit"
+msgstr ""
+
+#: admin/views/quick-edit.php:29 admin/views/quick-edit.php:58 admin/views/quick-edit.php:77 admin/views/assets.php:64 admin/views/asset-fields.php:37 admin/views/asset-fields.php:59 templates/asset-fields.php:43 templates/asset-fields.php:63
+msgid "— Select —"
+msgstr ""
+
+#. translators: %s: list entry name.
+#: admin/views/quick-edit.php:37 admin/views/quick-edit.php:66 includes/class-capo-inv-lists.php:77
+#, php-format
+msgid "%s (inactive)"
+msgstr ""
+
+#: admin/views/quick-edit.php:98
+msgid "This asset is archived. Set Record Status to Active to restore it and edit its details."
+msgstr ""
+
+#: admin/views/quick-edit.php:101
+msgid "Update"
+msgstr ""
+
+#: admin/views/quick-edit.php:102 admin/views/assets.php:93 admin/views/assets.php:132 admin/views/my-assets.php:51 admin/views/my-assets.php:79 admin/views/my-assets.php:112 templates/my-assets.php:62 templates/my-assets.php:98 templates/my-assets.php:127
+msgid "Cancel"
+msgstr ""
+
 #. translators: %s: Asset Tag.
 #: admin/views/assets.php:34
 #, php-format
@@ -212,10 +238,6 @@ msgstr ""
 
 #: admin/views/assets.php:44
 msgid "View request"
-msgstr ""
-
-#: admin/views/assets.php:64 admin/views/asset-fields.php:37 admin/views/asset-fields.php:59 templates/asset-fields.php:43 templates/asset-fields.php:63
-msgid "— Select —"
 msgstr ""
 
 #: admin/views/assets.php:76
@@ -238,10 +260,6 @@ msgstr ""
 
 #: admin/views/assets.php:92
 msgid "Register asset"
-msgstr ""
-
-#: admin/views/assets.php:93 admin/views/assets.php:132 admin/views/my-assets.php:51 admin/views/my-assets.php:79 admin/views/my-assets.php:112 templates/my-assets.php:62 templates/my-assets.php:98 templates/my-assets.php:127
-msgid "Cancel"
 msgstr ""
 
 #. translators: %s: Asset Tag.
@@ -281,7 +299,7 @@ msgstr ""
 msgid "Inventory of %s"
 msgstr ""
 
-#: admin/views/assets.php:147 admin/class-capo-inv-admin.php:91 admin/class-capo-inv-admin.php:110
+#: admin/views/assets.php:147 admin/class-capo-inv-admin.php:92 admin/class-capo-inv-admin.php:111
 msgid "All Assets"
 msgstr ""
 
@@ -293,19 +311,19 @@ msgstr ""
 msgid "Search assets"
 msgstr ""
 
-#: admin/views/assets.php:184
+#: admin/views/assets.php:185
 msgid "Export the assets shown by the current filters:"
 msgstr ""
 
-#: admin/views/assets.php:185 templates/assets.php:183
+#: admin/views/assets.php:186 templates/assets.php:183
 msgid "CSV for Excel"
 msgstr ""
 
-#: admin/views/assets.php:186 templates/assets.php:184
+#: admin/views/assets.php:187 templates/assets.php:184
 msgid "Plain CSV"
 msgstr ""
 
-#: admin/views/assets.php:187
+#: admin/views/assets.php:188
 msgid "\"CSV for Excel\" keeps leading zeros in Asset Tags and serial numbers when opened in Excel. \"Plain CSV\" is for importing into other systems. In both, a text value that starts with =, +, -, or @ gets a leading apostrophe so spreadsheets cannot run it as a formula."
 msgstr ""
 
@@ -369,7 +387,7 @@ msgstr ""
 msgid "Submit removal request"
 msgstr ""
 
-#: admin/views/my-assets.php:117 admin/class-capo-inv-admin.php:91 admin/class-capo-inv-admin.php:100
+#: admin/views/my-assets.php:117 admin/class-capo-inv-admin.php:92 admin/class-capo-inv-admin.php:101
 msgid "My Assets"
 msgstr ""
 
@@ -501,7 +519,7 @@ msgstr ""
 msgid "View asset history"
 msgstr ""
 
-#: admin/views/requests.php:161 admin/class-capo-inv-admin.php:115 templates/requests.php:160
+#: admin/views/requests.php:161 admin/class-capo-inv-admin.php:116 templates/requests.php:160
 msgid "Requests"
 msgstr ""
 
@@ -521,7 +539,7 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: admin/views/requests.php:170 admin/class-capo-inv-assets-table.php:94 templates/assets.php:90 templates/requests.php:157
+#: admin/views/requests.php:170 admin/class-capo-inv-assets-table.php:98 templates/assets.php:90 templates/requests.php:157
 msgid "All"
 msgstr ""
 
@@ -539,131 +557,155 @@ msgstr ""
 msgid "Review #%d"
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:92
+#: admin/class-capo-inv-admin.php:93
 msgid "CAPO Inventory"
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:117
+#: admin/class-capo-inv-admin.php:118
 msgid "Settings"
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:161
-msgid "No Locations are set up yet, so assets cannot be registered."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:163
-msgid "Add Locations"
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:316 admin/class-capo-inv-admin.php:645
-msgid "You do not have permission to do this."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:408 admin/class-capo-inv-admin.php:459
-msgid "You do not have permission to view this page."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:501
-msgid "Your asset was submitted for approval."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:518
-msgid "Your change request was submitted for approval."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:535
-msgid "Your removal request was submitted for approval."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:548
-msgid "Your request was cancelled."
-msgstr ""
-
-#: admin/class-capo-inv-admin.php:569
+#: admin/class-capo-inv-admin.php:142 admin/class-capo-inv-admin.php:586
 msgid "Asset updated."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:573
+#: admin/class-capo-inv-admin.php:143
+msgid "The asset could not be saved. Please try again, or reload the page."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:178
+msgid "No Locations are set up yet, so assets cannot be registered."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:180
+msgid "Add Locations"
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:333 admin/class-capo-inv-admin.php:665 admin/class-capo-inv-admin.php:742
+msgid "You do not have permission to do this."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:425 admin/class-capo-inv-admin.php:476
+msgid "You do not have permission to view this page."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:518
+msgid "Your asset was submitted for approval."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:535
+msgid "Your change request was submitted for approval."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:552
+msgid "Your removal request was submitted for approval."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:565
+msgid "Your request was cancelled."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:590
 msgid "Asset registered."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:603
+#: admin/class-capo-inv-admin.php:620
 msgid "Asset restored."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:603
+#: admin/class-capo-inv-admin.php:620
 msgid "Asset archived."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:620
+#: admin/class-capo-inv-admin.php:637
 msgid "Request approved and applied."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:623
+#: admin/class-capo-inv-admin.php:640
 msgid "Request rejected."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:625
+#: admin/class-capo-inv-admin.php:642
 msgid "Please choose Approve or Reject."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:633
+#: admin/class-capo-inv-admin.php:650
 msgid "The request cannot be approved:"
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:692
+#: admin/class-capo-inv-admin.php:674
+msgid "The asset no longer exists. Reload the page."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:677
+msgid "Someone else changed this asset after the page was loaded. Reload the page to see the latest details, then edit again."
+msgstr ""
+
+#. translators: %s: Asset Tag.
+#: admin/class-capo-inv-admin.php:732
+#, php-format
+msgid "Asset %s updated."
+msgstr ""
+
+#: admin/class-capo-inv-admin.php:789
 msgid "Unknown action."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:698
+#: admin/class-capo-inv-admin.php:795
 msgid "Saved."
 msgstr ""
 
-#: admin/class-capo-inv-admin.php:717
+#: admin/class-capo-inv-admin.php:814
 msgid "Settings saved."
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:93 templates/assets.php:89 includes/class-capo-inv-fields.php:55 includes/class-capo-inv-fields.php:79
+#: admin/class-capo-inv-assets-table.php:97 templates/assets.php:89 includes/class-capo-inv-fields.php:55 includes/class-capo-inv-fields.php:79
 msgid "Archived"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:140 templates/assets.php:96
+#: admin/class-capo-inv-assets-table.php:162 templates/assets.php:96
 msgid "All asset types"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:147 templates/assets.php:105
+#: admin/class-capo-inv-assets-table.php:169 templates/assets.php:105
 msgid "All locations"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:154 templates/assets.php:114
+#: admin/class-capo-inv-assets-table.php:176 templates/assets.php:114
 msgid "All employees"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:160 templates/assets.php:121
+#: admin/class-capo-inv-assets-table.php:182 templates/assets.php:121
 msgid "Filter"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:173
+#: admin/class-capo-inv-assets-table.php:195
 msgid "Edit"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:174
+#: admin/class-capo-inv-assets-table.php:196
 msgid "Archive"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:176
+#: admin/class-capo-inv-assets-table.php:198
 msgid "Restore"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:178
+#. translators: %s: Asset Tag.
+#: admin/class-capo-inv-assets-table.php:204
+#, php-format
+msgid "asset %s inline"
+msgstr ""
+
+#: admin/class-capo-inv-assets-table.php:206
 msgid "History"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:182 templates/assets.php:156
+#: admin/class-capo-inv-assets-table.php:210 templates/assets.php:156
 msgid "Pending request"
 msgstr ""
 
-#: admin/class-capo-inv-assets-table.php:232 templates/assets.php:178
+#: admin/class-capo-inv-assets-table.php:277 templates/assets.php:178
 msgid "No assets match these filters."
 msgstr ""
 
@@ -737,12 +779,6 @@ msgstr ""
 
 #: includes/class-capo-inv-install.php:206
 msgid "Inventory Manager"
-msgstr ""
-
-#. translators: %s: list entry name.
-#: includes/class-capo-inv-lists.php:77
-#, php-format
-msgid "%s (inactive)"
 msgstr ""
 
 #. translators: %d: entry ID.

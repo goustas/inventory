@@ -4,7 +4,7 @@ Author URI: https://www.pixelcrafters.com.cy
 Tags: inventory, assets, equipment, approval, audit
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,6 +60,13 @@ No. Employees submit requests; approved records change only when a request is ap
 Nothing, unless an Administrator ticks "Permanently delete all inventory data" under Settings → General before deleting the plugin.
 
 == Changelog ==
+
+= 1.3.0 - 2026-11-06 =
+* New: Quick Edit on CAPO Inventory → All Assets. Edit Asset Tag, Asset Type, Description / Make and Model, Serial Number, Location, Assigned Employee, Record Status and Notes inline, without leaving the list. The row updates in place after saving.
+* New: Quick Edit can archive an asset, or restore an archived asset and edit it in the same save. Archived assets' details are locked until Record Status is set back to Active.
+* Quick Edit uses the same validation, uniqueness checks and audit log as the full edit screen. Errors are shown next to each field; field changes and a status change are saved together or not at all.
+* Quick Edit refuses to save if someone else changed the asset after the page was loaded, so edits are never silently overwritten.
+* Keyboard: Enter saves, Escape cancels; focus returns to the row and the result is announced to screen readers.
 
 = 1.2.0 - 2026-11-06 =
 * Change: Every user with a role on the site can now submit assets and has a personal inventory (Administrators, Editors, Subscribers and custom roles included), except Inventory Managers. Previously only CAPO Employee, Inventory Manager and Administrator could.
