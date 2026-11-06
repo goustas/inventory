@@ -1,0 +1,119 @@
+/* CAPO Inventory admin styles — George Oustas, Pixelcrafters.com.cy */
+
+.capo-inv .capo-inv-tag {
+	font-family: Consolas, Monaco, "Courier New", monospace;
+	white-space: nowrap;
+}
+
+.capo-inv .capo-inv-required {
+	color: #b32d2e;
+}
+
+.capo-inv .capo-inv-field-error {
+	color: #b32d2e;
+	font-weight: 600;
+	margin: 4px 0 0;
+}
+
+.capo-inv [aria-invalid="true"] {
+	border-color: #b32d2e;
+	box-shadow: 0 0 0 1px #b32d2e;
+}
+
+.capo-inv .capo-inv-table,
+.capo-inv .capo-inv-details,
+.capo-inv .capo-inv-compare {
+	margin-top: 12px;
+}
+
+.capo-inv .capo-inv-details th,
+.capo-inv .capo-inv-compare tbody th {
+	width: 240px;
+	font-weight: 600;
+}
+
+.capo-inv .capo-inv-details,
+.capo-inv .capo-inv-compare {
+	max-width: 960px;
+}
+
+.capo-inv .capo-inv-table td,
+.capo-inv .capo-inv-compare td {
+	overflow-wrap: anywhere;
+}
+
+.capo-inv .capo-inv-compare tr.capo-inv-changed th,
+.capo-inv .capo-inv-compare tr.capo-inv-changed td {
+	background: #fcf3d6;
+}
+
+.capo-inv .capo-inv-compare tr.capo-inv-changed th::before {
+	content: "● ";
+	color: #996800;
+}
+
+.capo-inv .capo-inv-empty {
+	color: #757575;
+}
+
+.capo-inv .capo-inv-badge {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	line-height: 1.6;
+	background: #f0f0f1;
+	color: #1d2327;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.capo-inv .capo-inv-badge--pending  { background: #fcf3d6; color: #6d4c00; }
+.capo-inv .capo-inv-badge--approved { background: #e6f4ea; color: #1e5631; }
+.capo-inv .capo-inv-badge--rejected { background: #fbe9e9; color: #8a1f1f; }
+
+.capo-inv .capo-inv-inline-form {
+	display: inline;
+	margin: 0;
+}
+
+.capo-inv .button-link.capo-inv-link-danger,
+.capo-inv .button.capo-inv-link-danger {
+	color: #b32d2e;
+}
+
+.capo-inv .capo-inv-changes {
+	margin: 0;
+}
+
+.capo-inv .capo-inv-changes dt {
+	font-weight: 600;
+	margin-top: 4px;
+}
+
+.capo-inv .capo-inv-changes dt:first-child {
+	margin-top: 0;
+}
+
+.capo-inv .capo-inv-changes dd {
+	margin: 0 0 0 12px;
+	overflow-wrap: anywhere;
+}
+
+.capo-inv .capo-inv-changes del {
+	color: #757575;
+}
+
+.capo-inv .capo-inv-search,
+.capo-inv .capo-inv-add {
+	margin: 12px 0;
+}
+
+.capo-inv .capo-inv-export {
+	margin-top: 16px;
+}
+
+.capo-inv .capo-inv-review {
+	margin-top: 16px;
+	max-width: 960px;
+}
