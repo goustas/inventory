@@ -1,0 +1,2 @@
+# inventory
+Plugin for WordPress
