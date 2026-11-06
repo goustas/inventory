@@ -124,8 +124,11 @@ $capo_request_tag = static function ( array $request ) {
 			<h2><?php esc_html_e( 'Values requested', 'capo-inventory' ); ?></h2>
 			<table class="widefat striped capo-inv-details">
 				<tbody>
-				<?php foreach ( CAPO_Inv_Fields::editable_fields() as $capo_field ) : ?>
-					<?php $capo_value = $capo_request['payload_data'][ $capo_field ]; ?>
+				<?php
+				$capo_shown = null === $capo_request['payload_data']['_changed'] ? CAPO_Inv_Fields::editable_fields() : $capo_request['payload_data']['_changed'];
+				foreach ( $capo_shown as $capo_field ) :
+					$capo_value = $capo_request['payload_data'][ $capo_field ];
+					?>
 					<tr>
 						<th scope="row"><?php echo esc_html( CAPO_Inv_Fields::label( $capo_field ) ); ?></th>
 						<td><?php echo ( '' === $capo_value || 0 === $capo_value ) ? '—' : nl2br( esc_html( CAPO_Inv_Fields::display_value( $capo_field, $capo_value ) ) ); ?></td>

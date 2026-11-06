@@ -85,7 +85,30 @@ final class CAPO_Inv_Requests {
 			'location_id'   => isset( $data['location_id'] ) ? (int) $data['location_id'] : 0,
 			'serial_number' => isset( $data['serial_number'] ) ? (string) $data['serial_number'] : '',
 			'notes'         => isset( $data['notes'] ) ? (string) $data['notes'] : '',
+			// Fields the employee changed (change requests only). Null means "all fields".
+			'_changed'      => isset( $data['_changed'] ) && is_array( $data['_changed'] )
+				? array_values( array_intersect( CAPO_Inv_Fields::editable_fields(), $data['_changed'] ) )
+				: null,
 		);
+	}
+
+	/**
+	 * The record a change request would produce: the asset's current approved
+	 * values with only the employee's changed fields replaced. Edits a manager
+	 * made after the request was submitted are therefore kept on approval.
+	 *
+	 * @param array $request Request row.
+	 * @param array $asset   Current asset.
+	 * @return array
+	 */
+	public static function proposed_record( array $request, array $asset ) {
+		$payload = $request['payload_data'];
+		$fields  = null === $payload['_changed'] ? CAPO_Inv_Fields::editable_fields() : $payload['_changed'];
+		$record  = array();
+		foreach ( CAPO_Inv_Fields::editable_fields() as $field ) {
+			$record[ $field ] = in_array( $field, $fields, true ) ? $payload[ $field ] : $asset[ $field ];
+		}
+		return $record;
 	}
 
 	/**
@@ -169,13 +192,14 @@ final class CAPO_Inv_Requests {
 		$rows     = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 		// phpcs:enable
 
+		$rows = (array) $rows;
 		foreach ( $rows as &$row ) {
 			$row['payload_data'] = self::decode_payload( $row['payload'] );
 		}
 		unset( $row );
 
 		return array(
-			'rows'  => (array) $rows,
+			'rows'  => $rows,
 			'total' => $total,
 		);
 	}
@@ -207,10 +231,19 @@ final class CAPO_Inv_Requests {
 	 * @param int        $employee_id Employee.
 	 * @param array|null $data        Proposed record.
 	 * @param string     $reason      Employee comment.
+	 * @param array|null $changed     Fields changed by a change request; null for all.
 	 * @return int|WP_Error Request ID.
 	 */
-	private static function insert( $type, $asset_id, $employee_id, $data, $reason ) {
+	private static function insert( $type, $asset_id, $employee_id, $data, $reason, $changed = null ) {
 		global $wpdb;
+
+		// Reserve the Asset Tag / serial only when the request sets them.
+		$reserve_tag    = null !== $data && ( null === $changed || in_array( 'asset_tag', $changed, true ) );
+		$reserve_serial = null !== $data && ( null === $changed || in_array( 'serial_number', $changed, true ) );
+		if ( null !== $data && null !== $changed ) {
+			$data['_changed'] = array_values( $changed );
+		}
+
 		$ok = $wpdb->insert(
 			CAPO_Inv_Install::table( 'requests' ),
 			array(
@@ -219,8 +252,8 @@ final class CAPO_Inv_Requests {
 				'employee_id'          => (int) $employee_id,
 				'submitted_by'         => get_current_user_id(),
 				'payload'              => null === $data ? null : wp_json_encode( $data ),
-				'proposed_tag_norm'    => null === $data ? null : CAPO_Inv_Fields::normalize_tag( $data['asset_tag'] ),
-				'proposed_serial_norm' => null === $data ? null : CAPO_Inv_Fields::normalize_serial( $data['serial_number'] ),
+				'proposed_tag_norm'    => $reserve_tag ? CAPO_Inv_Fields::normalize_tag( $data['asset_tag'] ) : null,
+				'proposed_serial_norm' => $reserve_serial ? CAPO_Inv_Fields::normalize_serial( $data['serial_number'] ) : null,
 				'reason'               => '' === $reason ? null : $reason,
 				'status'               => 'pending',
 				'created_at'           => CAPO_Inv_Fields::now(),
@@ -240,7 +273,7 @@ final class CAPO_Inv_Requests {
 	 * @return string
 	 */
 	private static function clean_reason( $reason ) {
-		$reason = CAPO_Inv_Fields::trim( sanitize_textarea_field( (string) $reason ) );
+		$reason = CAPO_Inv_Fields::clean_text( $reason, true );
 		return function_exists( 'mb_substr' ) ? mb_substr( $reason, 0, 1000, 'UTF-8' ) : substr( $reason, 0, 1000 );
 	}
 
@@ -290,7 +323,7 @@ final class CAPO_Inv_Requests {
 			return new WP_Error( 'no_change', __( 'You did not change anything, so no request was submitted.', 'capo-inventory' ) );
 		}
 		$reason = self::clean_reason( $reason );
-		$id     = self::insert( 'update', $asset_id, $employee_id, $data, $reason );
+		$id     = self::insert( 'update', $asset_id, $employee_id, $data, $reason, array_keys( $changes ) );
 		if ( ! is_wp_error( $id ) ) {
 			CAPO_Inv_Audit::log( $asset_id, 'request_submitted', get_current_user_id(), $changes, $id, $reason );
 		}
@@ -402,11 +435,16 @@ final class CAPO_Inv_Requests {
 				if ( ! $asset || (int) $asset['employee_id'] !== (int) $request['employee_id'] ) {
 					$result = new WP_Error( 'moved', __( 'The asset has been reassigned or removed since this request was submitted. Reject the request instead.', 'capo-inventory' ) );
 				} else {
-					$result = CAPO_Inv_Assets::update( $asset_id, $request['payload_data'], null, $reviewer_id, $request_id );
+					$result = CAPO_Inv_Assets::update( $asset_id, self::proposed_record( $request, $asset ), null, $reviewer_id, $request_id );
 				}
 				break;
 			case 'delete':
-				$result = CAPO_Inv_Assets::archive( $asset_id, $reviewer_id, $request_id, (string) $request['reason'] );
+				$asset = CAPO_Inv_Assets::get( $asset_id );
+				if ( ! $asset || 'active' !== $asset['status'] || (int) $asset['employee_id'] !== (int) $request['employee_id'] ) {
+					$result = new WP_Error( 'moved', __( 'The asset has been reassigned or removed since this request was submitted. Reject the request instead.', 'capo-inventory' ) );
+				} else {
+					$result = CAPO_Inv_Assets::archive( $asset_id, $reviewer_id, $request_id, (string) $request['reason'] );
+				}
 				break;
 			default:
 				$result = new WP_Error( 'type', __( 'Unknown request type.', 'capo-inventory' ) );
@@ -417,8 +455,8 @@ final class CAPO_Inv_Requests {
 			return $result;
 		}
 
-		$table = CAPO_Inv_Install::table( 'requests' );
-		$wpdb->update(
+		$table   = CAPO_Inv_Install::table( 'requests' );
+		$updated = $wpdb->update(
 			$table,
 			array(
 				'status'      => 'approved',
@@ -431,6 +469,10 @@ final class CAPO_Inv_Requests {
 			array( '%s', '%d', '%s', '%d', '%s' ),
 			array( '%d' )
 		);
+		if ( ! $updated ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new WP_Error( 'db', __( 'The request could not be marked as approved because of a database error. Nothing was changed.', 'capo-inventory' ) );
+		}
 		CAPO_Inv_Audit::log( $asset_id, 'request_approved', $reviewer_id, array(), $request_id, $note );
 
 		$wpdb->query( 'COMMIT' );
@@ -472,14 +514,15 @@ final class CAPO_Inv_Requests {
 	 * @return array[] Each: field, label, current, proposed, changed.
 	 */
 	public static function comparison( array $request ) {
-		$asset = $request['asset_id'] ? CAPO_Inv_Assets::get( (int) $request['asset_id'] ) : null;
-		$rows  = array();
+		$asset  = $request['asset_id'] ? CAPO_Inv_Assets::get( (int) $request['asset_id'] ) : null;
+		$target = ( 'update' === $request['request_type'] && $asset ) ? self::proposed_record( $request, $asset ) : $request['payload_data'];
+		$rows   = array();
 		foreach ( CAPO_Inv_Fields::editable_fields() as $field ) {
 			$current = $asset ? CAPO_Inv_Fields::display_value( $field, $asset[ $field ] ) : '';
 			if ( 'delete' === $request['request_type'] ) {
 				$proposed = $current;
 			} else {
-				$value    = $request['payload_data'][ $field ];
+				$value    = $target[ $field ];
 				$proposed = ( '' === $value || 0 === $value ) ? '' : CAPO_Inv_Fields::display_value( $field, $value );
 			}
 			$rows[] = array(

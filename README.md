@@ -1,4 +1,4 @@
-# CAPO Inventory 1.0.0
+# CAPO Inventory 1.0.1
 
 WordPress plugin for the Cyprus Agricultural Payments Organisation's IT equipment register.
 Author: George Oustas, Pixelcrafters.com.cy — https://www.pixelcrafters.com.cy
@@ -51,7 +51,7 @@ Uniqueness is enforced twice: by the plugin before saving, and by `UNIQUE` index
 1. An employee registers an asset, or requests a change or removal of one of their own active assets.
 2. The request is stored separately. The approved record is not touched.
 3. A manager opens the request under Requests, sees the current approved values next to the proposed values (changed fields highlighted), and approves or rejects it with an optional comment.
-4. On approval the plugin re-checks every rule (including uniqueness) inside a database transaction, then creates, updates or archives the asset and writes the audit entry.
+4. On approval the plugin re-checks every rule (including uniqueness) inside a database transaction, then creates, updates or archives the asset and writes the audit entry. A change request applies only the fields the employee changed, so edits a manager made in the meantime are kept. A change or removal is refused if the asset has been reassigned to someone else since the request was made.
 
 Removal is a soft delete: the asset is archived, leaves the employee's active inventory, and keeps its Asset Tag reserved. Archived assets can be restored by a manager.
 
@@ -60,7 +60,7 @@ Removal is a soft delete: the asset is archived, leaves the employee's active in
 All Assets → **CSV for Excel** or **Plain CSV**. Both export every row matching the current filters (not just the visible page), include a UTF-8 byte-order mark so Greek text displays correctly in Excel, and use the new field names as headings.
 
 - **CSV for Excel** writes identifiers as `="000123"` so Excel keeps leading zeros when the file is double-clicked.
-- **Plain CSV** contains the stored values exactly, for import into other systems.
+- **Plain CSV** contains the stored values for import into other systems. Asset Tags are exported exactly; other text values that start with a formula character are prefixed as described below.
 
 Free-text cells starting with `=`, `+`, `-`, `@`, tab or carriage return are prefixed with `'` to block spreadsheet formula injection.
 
@@ -83,7 +83,7 @@ The original specification was not available while building this version. The fo
 
 ## 6. Acceptance checks
 
-"Automated" means checked by the logic test script run during the build (63 checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
+"Automated" means checked by the logic test script run during the build (74 checks, all passing) against an in-memory SQLite database standing in for WordPress's database layer. **The plugin has not yet been run inside a real WordPress and MySQL installation.** The admin screens were syntax-checked but not rendered.
 
 | Check | Status |
 |---|---|
@@ -94,6 +94,9 @@ The original specification was not available while building this version. The fo
 | Employees cannot act on another employee's asset | Automated. |
 | Duplicate messages do not reveal other employees' assets | Automated. |
 | Approval re-checks uniqueness | Automated. |
+| Approving a change keeps manager edits made after the request was submitted | Automated. |
+| Approving a removal is refused if the asset was reassigned meanwhile | Automated. |
+| Typed text is stored as entered (no silent removal of `<`, `%20` etc.) | Automated. |
 | Audit log records old and new values | Automated. |
 | PDF checks (ownership, Greek text, multipage, signature area) | Not applicable — PDF deferred. |
 

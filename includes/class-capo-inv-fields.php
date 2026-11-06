@@ -144,20 +144,43 @@ final class CAPO_Inv_Fields {
 	 * @return array
 	 */
 	public static function clean_input( array $raw ) {
-		$text = static function ( $key ) use ( $raw ) {
-			return isset( $raw[ $key ] ) ? self::trim( sanitize_text_field( $raw[ $key ] ) ) : '';
+		$get = static function ( $key ) use ( $raw ) {
+			return isset( $raw[ $key ] ) ? $raw[ $key ] : '';
 		};
 
-		$notes = isset( $raw['notes'] ) ? self::trim( sanitize_textarea_field( $raw['notes'] ) ) : '';
-
 		return array(
-			'asset_tag'     => self::clean_tag( isset( $raw['asset_tag'] ) ? sanitize_text_field( $raw['asset_tag'] ) : '' ),
-			'type_id'       => isset( $raw['type_id'] ) ? absint( $raw['type_id'] ) : 0,
-			'description'   => $text( 'description' ),
-			'location_id'   => isset( $raw['location_id'] ) ? absint( $raw['location_id'] ) : 0,
-			'serial_number' => $text( 'serial_number' ),
-			'notes'         => $notes,
+			// Not run through sanitize_text_field(): that would silently drop characters
+			// such as "<" or "%20" and could turn a mistyped tag into a different valid one.
+			// The strict format check in validate() rejects anything unexpected instead.
+			'asset_tag'     => self::clean_tag( self::clean_text( $get( 'asset_tag' ) ) ),
+			'type_id'       => absint( $get( 'type_id' ) ),
+			'description'   => self::clean_text( $get( 'description' ) ),
+			'location_id'   => absint( $get( 'location_id' ) ),
+			'serial_number' => self::clean_text( $get( 'serial_number' ) ),
+			'notes'         => self::clean_text( $get( 'notes' ), true ),
 		);
+	}
+
+	/**
+	 * Clean free text for storage without altering what the user typed.
+	 *
+	 * Removes invalid UTF-8 and control characters, and line breaks from
+	 * single-line fields. HTML is kept as typed (for example "Monitor <24in>")
+	 * and is escaped wherever it is displayed.
+	 *
+	 * @param mixed $value     Raw value.
+	 * @param bool  $multiline Keep line breaks.
+	 * @return string
+	 */
+	public static function clean_text( $value, $multiline = false ) {
+		$value = is_scalar( $value ) ? (string) $value : '';
+		$value = wp_check_invalid_utf8( $value );
+		$value = str_replace( array( "\r\n", "\r" ), "\n", $value );
+		if ( ! $multiline ) {
+			$value = str_replace( array( "\n", "\t" ), ' ', $value );
+		}
+		$value = preg_replace( $multiline ? '/[^\P{Cc}\n\t]/u' : '/\p{Cc}/u', '', $value );
+		return self::trim( null === $value ? '' : $value );
 	}
 
 	/**

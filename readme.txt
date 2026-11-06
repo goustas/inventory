@@ -4,7 +4,7 @@ Author URI: https://www.pixelcrafters.com.cy
 Tags: inventory, assets, equipment, approval, audit
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,6 +45,16 @@ No. Employees submit requests; approved records change only when a request is ap
 Nothing, unless an Administrator ticks "Permanently delete all inventory data" under Settings → General before deleting the plugin.
 
 == Changelog ==
+
+= 1.0.1 - 2026-11-06 =
+* Fix: Approving a change request no longer overwrites fields the employee did not change. Edits a manager made after the request was submitted are kept, and the approval comparison highlights only the employee's changes.
+* Fix: A pending change request reserves an Asset Tag or serial number only when it changes that field.
+* Fix: Approving a removal request is refused if the asset has been reassigned to another employee since the request was made.
+* Fix: Reassigning an asset now always takes effect, even when the submitted data already carries an employee.
+* Fix: Text is stored as typed. Characters such as "<" or "%20" were silently removed from descriptions, serial numbers and notes, and could change a mistyped Asset Tag into a different valid one; mistyped tags are now rejected instead.
+* Fix: The request status update during approval is checked; on failure the whole approval is rolled back.
+* Improvement: Filter and search URLs on All Assets no longer carry the list table's nonce and referer fields.
+* Improvement: Export help text now explains the formula-protection prefix.
 
 = 1.0.0 - 2026-11-06 =
 * New: Asset Tag / Inventory Number field (replaces the earlier "label"). Stored as text with leading zeros kept, letters/numbers/hyphens only, required, unique across active and archived assets (case and surrounding spaces ignored). The internal database ID is kept separate.

@@ -206,7 +206,7 @@ final class CAPO_Inv_Assets {
 		}
 		$id = (int) $wpdb->insert_id;
 
-		$after   = $data + array( 'employee_id' => (int) $employee_id );
+		$after   = array_merge( $data, array( 'employee_id' => (int) $employee_id ) );
 		$changes = CAPO_Inv_Audit::diff( array(), $after, self::tracked_fields() );
 		CAPO_Inv_Audit::log( $id, 'created', $actor_id, $changes, $request_id );
 
@@ -243,7 +243,7 @@ final class CAPO_Inv_Assets {
 		}
 
 		$new_employee = null === $employee_id ? (int) $current['employee_id'] : (int) $employee_id;
-		$after        = $data + array( 'employee_id' => $new_employee );
+		$after        = array_merge( $data, array( 'employee_id' => $new_employee ) );
 		$changes      = CAPO_Inv_Audit::diff( $current, $after, self::tracked_fields() );
 		if ( ! $changes ) {
 			return true;

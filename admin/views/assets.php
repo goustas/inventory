@@ -184,7 +184,7 @@ if ( in_array( $capo_view, array( 'edit', 'status' ), true ) ) {
 		<strong><?php esc_html_e( 'Export the assets shown by the current filters:', 'capo-inventory' ); ?></strong>
 		<a class="button" href="<?php echo esc_url( add_query_arg( 'format', 'excel', $capo_export_url ) ); ?>"><?php esc_html_e( 'CSV for Excel', 'capo-inventory' ); ?></a>
 		<a class="button" href="<?php echo esc_url( add_query_arg( 'format', 'csv', $capo_export_url ) ); ?>"><?php esc_html_e( 'Plain CSV', 'capo-inventory' ); ?></a>
-		<br /><span class="description"><?php esc_html_e( '"CSV for Excel" keeps leading zeros in Asset Tags and serial numbers when opened in Excel. "Plain CSV" contains the values exactly as stored, for other systems.', 'capo-inventory' ); ?></span>
+		<br /><span class="description"><?php esc_html_e( '"CSV for Excel" keeps leading zeros in Asset Tags and serial numbers when opened in Excel. "Plain CSV" is for importing into other systems. In both, a text value that starts with =, +, -, or @ gets a leading apostrophe so spreadsheets cannot run it as a formula.', 'capo-inventory' ); ?></span>
 	</p>
 <?php endif; ?>
 </div>

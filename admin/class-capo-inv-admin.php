@@ -96,7 +96,10 @@ final class CAPO_Inv_Admin {
 		$pending = CAPO_Inv_Requests::pending_count();
 		$badge   = $pending ? sprintf( ' <span class="awaiting-mod count-%1$d"><span class="pending-count">%1$d</span></span>', $pending ) : '';
 
-		add_submenu_page( self::SLUG_MY, __( 'All Assets', 'capo-inventory' ), __( 'All Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_ASSETS, array( $this, 'page_assets' ) );
+		$assets_hook = add_submenu_page( self::SLUG_MY, __( 'All Assets', 'capo-inventory' ), __( 'All Assets', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_ASSETS, array( $this, 'page_assets' ) );
+		if ( $assets_hook ) {
+			add_action( 'load-' . $assets_hook, array( $this, 'clean_list_url' ) );
+		}
 		add_submenu_page( self::SLUG_MY, __( 'Employees', 'capo-inventory' ), __( 'Employees', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_EMPLOYEES, array( $this, 'page_employees' ) );
 		add_submenu_page( self::SLUG_MY, __( 'Requests', 'capo-inventory' ), __( 'Requests', 'capo-inventory' ) . $badge, CAPO_Inv_Install::CAP_MANAGE, self::SLUG_REQUESTS, array( $this, 'page_requests' ) );
 		add_submenu_page( self::SLUG_MY, __( 'Audit Log', 'capo-inventory' ), __( 'Audit Log', 'capo-inventory' ), CAPO_Inv_Install::CAP_MANAGE, self::SLUG_AUDIT, array( $this, 'page_audit' ) );
@@ -114,6 +117,21 @@ final class CAPO_Inv_Admin {
 			return;
 		}
 		wp_enqueue_style( 'capo-inventory-admin', CAPO_INV_URL . 'assets/css/admin.css', array(), CAPO_INV_VERSION );
+	}
+
+	/**
+	 * The list table's filter form submits by GET and carries the table's nonce
+	 * and referer fields. Strip them, as WordPress core does on its own list
+	 * screens, so filter URLs stay short and shareable.
+	 */
+	public function clean_list_url() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only removes query args.
+		if ( empty( $_GET['_wp_http_referer'] ) || ! isset( $_SERVER['REQUEST_URI'] ) ) {
+			return;
+		}
+		$uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		wp_safe_redirect( remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'filter_action' ), $uri ) );
+		exit;
 	}
 
 	/**
@@ -518,7 +536,7 @@ final class CAPO_Inv_Admin {
 		$this->guard( CAPO_Inv_Install::CAP_MANAGE, 'capo_inv_set_status' );
 		$post     = $this->post();
 		$asset_id = isset( $post['asset_id'] ) ? absint( $post['asset_id'] ) : 0;
-		$note     = isset( $post['note'] ) ? CAPO_Inv_Fields::trim( sanitize_textarea_field( $post['note'] ) ) : '';
+		$note     = isset( $post['note'] ) ? CAPO_Inv_Fields::clean_text( $post['note'], true ) : '';
 		$target   = isset( $post['status'] ) && 'active' === $post['status'] ? 'active' : 'archived';
 
 		$result = 'active' === $target
